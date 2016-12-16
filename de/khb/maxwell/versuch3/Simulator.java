@@ -33,7 +33,7 @@ public class Simulator {
 		
 		double[][] matrixArray = new double[12*((int) Math.pow(GRAD+1,4)) + 4*((int) Math.pow(GRAD+1,3))][10*((int) Math.pow(GRAD+1,4))];
 		double[] rechteSeite = new double[12*((int) Math.pow(GRAD+1,4)) + 4*((int) Math.pow(GRAD+1,3))];
-		//Gleichungen einfügen
+		//Gleichungen einfÃ¼gen
 		
 		//Anfangsbedingungen:
 		int zaehlerZeile = 0;
