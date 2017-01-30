@@ -1,9 +1,17 @@
 package schappi.felder2;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class PointCharge extends FieldSource {
+	
+	private static final double RADIUS = 0.25;
+	private static final int NUMBER_FIELDLINES = 16;
 
 	private final Point point;
 	private final double charge;
+	
+	private Map<Point, Boolean> beginPointsFieldLines;
 	
 	/**
 	 * 
@@ -40,7 +48,23 @@ public class PointCharge extends FieldSource {
 
 	@Override
 	public boolean isNearby(Point p) {
-		return Vector.add(p, point.scalarMultiplication(-1d)).magnitude() < 0.25;
+		return Vector.add(p, point.scalarMultiplication(-1d)).magnitude() < RADIUS;
+	}
+
+	@Override
+	public Map<Point, Boolean> getBeginPointsFieldLines() {
+		if(beginPointsFieldLines == null)
+			beginPointsFieldLines = genBeginPointsFieldLines();
+		return beginPointsFieldLines;
+	}
+	
+	private Map<Point, Boolean> genBeginPointsFieldLines() {
+		Map<Point, Boolean> map = new HashMap<>();
+		for(int i = 0;i < NUMBER_FIELDLINES;i++){
+			double angle = i*2*Math.PI/NUMBER_FIELDLINES;
+			map.put(Vector.add(point, new Vector(Math.cos(angle), Math.sin(angle)).scalarMultiplication(RADIUS*1.05)).toPoint(), charge > 0);
+		}
+		return map;
 	}
 
 }
