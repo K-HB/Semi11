@@ -1,11 +1,9 @@
 package schappi.felder2.ui;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Stroke;
-import java.awt.geom.AffineTransform;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -14,24 +12,29 @@ import javax.swing.JPanel;
 
 import schappi.felder2.Point;
 import schappi.felder2.Vector;
-import schappi.felder2.graphic.FieldSourceGraphic;
+import schappi.felder2.graphic.BFieldSourceGraphic;
+import schappi.felder2.graphic.EFieldSourceGraphic;
 
 public class DrawFieldLines extends JPanel {
 
 	private static final long serialVersionUID = 1L;
-	public Set<List<Point>> fieldLines;
+	public Set<List<Point>> eFieldLines;
+	public Set<List<Point>> bFieldLines;
 	public Set<List<Point>> epLines;
-	public Set<FieldSourceGraphic> sources;
+	public Set<EFieldSourceGraphic> sources;
+	public Set<BFieldSourceGraphic> bSources;
 	public int size;
-	public boolean drawEP = false , drawFieldLines = false, drawVectors=false;
+	public boolean drawEP = false , drawElFieldLines = false, drawBFieldLines = false, drawVectors=false;
 	public Vector[][] field;
 	public double distanceUnits;
 	
-	public DrawFieldLines(Set<List<Point>> fl, Set<List<Point>> epl, int s, Set<FieldSourceGraphic> sources){
-		fieldLines = fl;
+	public DrawFieldLines(Set<List<Point>> efl, Set<List<Point>> bfl, Set<List<Point>> epl, int s, Set<EFieldSourceGraphic> sources, Set<BFieldSourceGraphic> bSources){
+		eFieldLines = efl;
+		bFieldLines = bfl;
 		epLines = epl;
 		size = s;
 		this.sources = sources;
+		this.bSources = bSources;
 	}
 	
 	public synchronized void paint(Graphics gr){
@@ -52,13 +55,18 @@ public class DrawFieldLines extends JPanel {
 		}
 		
 		//draw Sources
-		for(FieldSourceGraphic fs: sources){
+		for(EFieldSourceGraphic fs: sources){
 			fs.paint(g, hppu, vppu);
 		}
 		
-		//draw Field Lines
-		if(drawFieldLines){
-			for(List<Point> l:fieldLines){
+		//draw bSources
+		for(BFieldSourceGraphic fs: bSources){
+			fs.paint(g, hppu, vppu);
+		}
+		
+		//draw eField Lines
+		if(drawElFieldLines){
+			for(List<Point> l:eFieldLines){
 				Iterator<Point> iter = l.iterator();
 				Point last = iter.next();
 				while (iter.hasNext()){
@@ -68,6 +76,21 @@ public class DrawFieldLines extends JPanel {
 				}
 			}
 		}
+		
+		g.setColor(Color.GRAY);
+		
+		//draw bField Lines
+		if(drawBFieldLines){
+			for(List<Point> l:bFieldLines){
+				Iterator<Point> iter = l.iterator();
+				Point last = iter.next();
+				while (iter.hasNext()){
+					Point curr = iter.next();
+					g.drawLine((int) (last.x*hppu), (int) (last.y*vppu), (int) (curr.x*hppu), (int) (curr.y*vppu));
+					last = curr;
+				}
+			}
+		}		
 		
 		g.setColor(Color.RED);
 		

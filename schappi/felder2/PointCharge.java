@@ -1,7 +1,7 @@
 package schappi.felder2;
 
 
-public class PointCharge extends FieldSource {
+public class PointCharge extends EFieldSource {
 	
 	private final Point point;
 	private final double charge;

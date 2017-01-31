@@ -9,20 +9,26 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.HashSet;
-import java.util.Set;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JRadioButton;
+import javax.swing.JSlider;
 import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import schappi.felder2.Point;
 import schappi.felder2.Simulation;
 import schappi.felder2.Vector;
-import schappi.felder2.graphic.FieldSourceGraphic;
+import schappi.felder2.graphic.BFieldSourceGraphic;
+import schappi.felder2.graphic.EFieldSourceGraphic;
+import schappi.felder2.graphic.LineCurrentGraphic;
 import schappi.felder2.graphic.PointChargeGraphic;
 
-public class FieldLinesWindow extends JFrame implements MouseListener, ActionListener {
+public class FieldLinesWindow extends JFrame implements MouseListener, ActionListener, ChangeListener {
 	
 	public static final String WINDOW_TITLE = "Feldliniensimulation";
 	
@@ -37,9 +43,11 @@ public class FieldLinesWindow extends JFrame implements MouseListener, ActionLis
 	//--------------------------------------------
 	// Toolbox
 	private JFrame toolboxFrame;
-	private JLabel radiusLabel, chargeLabel, FLLabel, EPLLabel, vectorsLabel;
+	private JLabel radiusLabel, chargeLabel, FLLabel, EPLLabel, vectorsLabel, uGFLLabel, densityLabel;
 	private JTextField radiusInput, chargeInput;
-	private JCheckBox showFieldLines, showEPL, showVectors;
+	private JCheckBox showFieldLines, showEPL, showVectors, useGridFieldLines;
+	private JSlider slideDensity;
+	private JRadioButton pointChargeRadio, lineCurrentRadio;
 	
 	public FieldLinesWindow (int size, int width, int height) {
 		super(WINDOW_TITLE);
@@ -52,7 +60,7 @@ public class FieldLinesWindow extends JFrame implements MouseListener, ActionLis
 	}
 	
 	private void initialize(){
-		dfl = new DrawFieldLines(null, null, size, new HashSet<FieldSourceGraphic>());
+		dfl = new DrawFieldLines(null, null, null, size, new HashSet<EFieldSourceGraphic>(), new HashSet<BFieldSourceGraphic>());
 		dfl.addMouseListener(this);
 		
 		horizontalPixelsPerUnit = width / (size - 1);
@@ -69,8 +77,18 @@ public class FieldLinesWindow extends JFrame implements MouseListener, ActionLis
 		radiusLabel = new JLabel("Radius:");
 		chargeLabel = new JLabel("Ladung:");
 		FLLabel = new JLabel("Feldlinien anzeigen");
-		EPLLabel = new JLabel("Ã„quipotenziallinien anzeigen");
+		uGFLLabel = new JLabel("Für Feldlinien Gittererzeugung nutzen");
+		densityLabel = new JLabel("Feldlinendichte: ");
+		EPLLabel = new JLabel("Äquipotenziallinien anzeigen");
 		vectorsLabel = new JLabel("Feldvektoren anzeigen");
+		pointChargeRadio = new JRadioButton("Punktladung");
+		pointChargeRadio.setSelected(true);
+		pointChargeRadio.addActionListener(this);
+		lineCurrentRadio = new JRadioButton("Stromleitung");
+		lineCurrentRadio.addActionListener(this);
+		ButtonGroup groupRadio = new ButtonGroup();
+		groupRadio.add(pointChargeRadio);
+		groupRadio.add(lineCurrentRadio);
 		radiusInput = new JTextField();
 		radiusInput.setPreferredSize(new Dimension(100, radiusInput.getPreferredSize().height));
 		chargeInput = new JTextField();
@@ -81,20 +99,35 @@ public class FieldLinesWindow extends JFrame implements MouseListener, ActionLis
 		showEPL.addActionListener(this);
 		showVectors = new JCheckBox();
 		showVectors.addActionListener(this);
+		useGridFieldLines = new JCheckBox();
+		useGridFieldLines.addActionListener(this);
+		useGridFieldLines.setEnabled(false);
+		slideDensity = new JSlider(JSlider.HORIZONTAL, 0, 10, 2);
+		slideDensity.addChangeListener(this);
 		
-		toolboxFrame.add(radiusLabel, new GridBagConstraints(0, 0, 1, 1, 0.3, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
-		toolboxFrame.add(radiusInput, new GridBagConstraints(1, 0, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
-		toolboxFrame.add(chargeLabel, new GridBagConstraints(0, 1, 1, 1, 0.3, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
-		toolboxFrame.add(chargeInput, new GridBagConstraints(1, 1, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
 		
-		toolboxFrame.add(showFieldLines, new GridBagConstraints(0, 2, 1, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
-		toolboxFrame.add(FLLabel, new GridBagConstraints(1, 2, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
+		toolboxFrame.add(pointChargeRadio, new GridBagConstraints(0, 0, 1, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
+		toolboxFrame.add(lineCurrentRadio, new GridBagConstraints(1, 0, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
 		
-		toolboxFrame.add(showEPL, new GridBagConstraints(0, 3, 1, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
-		toolboxFrame.add(EPLLabel, new GridBagConstraints(1, 3, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
+		toolboxFrame.add(radiusLabel, new GridBagConstraints(0, 1, 1, 1, 0.3, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
+		toolboxFrame.add(radiusInput, new GridBagConstraints(1, 1, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
+		toolboxFrame.add(chargeLabel, new GridBagConstraints(0, 2, 1, 1, 0.3, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
+		toolboxFrame.add(chargeInput, new GridBagConstraints(1, 2, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
 		
-		toolboxFrame.add(showVectors, new GridBagConstraints(0, 4, 1, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
-		toolboxFrame.add(vectorsLabel, new GridBagConstraints(1, 4, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
+		toolboxFrame.add(showFieldLines, new GridBagConstraints(0, 3, 1, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
+		toolboxFrame.add(FLLabel, new GridBagConstraints(1, 3, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
+		
+		toolboxFrame.add(useGridFieldLines, new GridBagConstraints(0, 4, 1, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
+		toolboxFrame.add(uGFLLabel, new GridBagConstraints(1, 4, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
+		
+		toolboxFrame.add(slideDensity, new GridBagConstraints(0, 5, 1, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
+		toolboxFrame.add(densityLabel, new GridBagConstraints(1, 5, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
+		
+		toolboxFrame.add(showEPL, new GridBagConstraints(0, 6, 1, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
+		toolboxFrame.add(EPLLabel, new GridBagConstraints(1, 6, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
+		
+		toolboxFrame.add(showVectors, new GridBagConstraints(0, 7, 1, 1, 1, 1, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
+		toolboxFrame.add(vectorsLabel, new GridBagConstraints(1, 7, 1, 1, 1, 1, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
 		
 		toolboxFrame.pack();
 		toolboxFrame.setVisible(true);
@@ -105,18 +138,35 @@ public class FieldLinesWindow extends JFrame implements MouseListener, ActionLis
 		int x = e.getX();
 		int y = e.getY();
 		
-		for(FieldSourceGraphic s : dfl.sources){
+		for(EFieldSourceGraphic s : dfl.sources){
 			if(s.isColliding(new Point(x/horizontalPixelsPerUnit, y/verticalPixelsPerUnit))){
 				dfl.sources.remove(s);
 				simulateAllNeeded();
 				return;
 			}
 		}
+		for(BFieldSourceGraphic s : dfl.bSources){
+			if(s.isColliding(new Point(x/horizontalPixelsPerUnit, y/verticalPixelsPerUnit))){
+				dfl.bSources.remove(s);
+				simulateAllNeeded();
+				return;
+			}
+		}
 		
-		double radius = Double.parseDouble(radiusInput.getText());
-		double charge = Double.parseDouble(chargeInput.getText());
+		double radius;
+		double charge;
+		try{
+			radius = Double.parseDouble(radiusInput.getText());
+			charge = Double.parseDouble(chargeInput.getText());
+		}
+		catch(NumberFormatException ex){
+			return;
+		}
 		
-		dfl.sources.add(new PointChargeGraphic(radius, 16, new Point(x/horizontalPixelsPerUnit, y/verticalPixelsPerUnit), charge));
+		if(pointChargeRadio.isSelected())
+			dfl.sources.add(new PointChargeGraphic(radius, 16, new Point(x/horizontalPixelsPerUnit, y/verticalPixelsPerUnit), charge));
+		else
+			dfl.bSources.add(new LineCurrentGraphic(radius, new Point(x/horizontalPixelsPerUnit, y/verticalPixelsPerUnit), charge));
 		simulateAllNeeded();
 	}
 
@@ -147,26 +197,45 @@ public class FieldLinesWindow extends JFrame implements MouseListener, ActionLis
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource() == showFieldLines){
+			useGridFieldLines.setEnabled(showFieldLines.isSelected());
 			simulateAllNeeded();
 		}else if(e.getSource() == showVectors){
 			simulateAllNeeded();
+		}else if(e.getSource() == useGridFieldLines){
+			slideDensity.setEnabled(useGridFieldLines.isSelected());
+			simulateAllNeeded();
+		}else if(e.getSource() == pointChargeRadio){
+			chargeLabel.setText("Ladung: ");
 		}
+		else if(e.getSource() == lineCurrentRadio){
+			chargeLabel.setText("Strom: ");
+		}
+	}
+	
+	@Override
+	public void stateChanged(ChangeEvent e) {
+		//slideDensity
+		simulateAllNeeded();
 	}
 
 	private void simulateAllNeeded() {
-		if(showFieldLines.isSelected()){
-			dfl.drawFieldLines = true;
-			Simulation sim = new Simulation(size, dfl.sources);
-			sim.simulateAllFieldLines(1E-2);
-			dfl.fieldLines = sim.fieldLines;
+		if(showFieldLines.isSelected()){ //sowohl E als auch B Linien
+			dfl.drawElFieldLines = true;
+			dfl.drawBFieldLines = true;
+			Simulation sim = new Simulation(size, dfl.sources, dfl.bSources);
+			sim.simulateAllElFieldLines(1E-2, useGridFieldLines.isSelected(), slideDensity.getValue());
+			sim.simulateAllBFieldLines(1E-2, useGridFieldLines.isSelected(), slideDensity.getValue());
+			dfl.eFieldLines = sim.eFieldLines;
+			dfl.bFieldLines = sim.bFieldLines;
 			dfl.repaint();
 		}else{
-			dfl.drawFieldLines = false;
+			dfl.drawElFieldLines = false;
+			dfl.drawBFieldLines = false;
 			dfl.repaint();
 		}
 		if(showVectors.isSelected()){
 			dfl.drawVectors = true;
-			Simulation sim = new Simulation(size, dfl.sources);
+			Simulation sim = new Simulation(size, dfl.sources, dfl.bSources);
 			dfl.field = genFieldArray(sim, .25, size);
 			dfl.distanceUnits = .25;
 			dfl.repaint();
@@ -174,6 +243,7 @@ public class FieldLinesWindow extends JFrame implements MouseListener, ActionLis
 			dfl.drawVectors = false;
 			dfl.repaint();
 		}
+		//TODO: tiefer Sinn, dass mehrfach repaint()?
 	}
 	
 	private static Vector[][] genFieldArray(Simulation sim, double distanceUnits, int size){

@@ -5,26 +5,34 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import schappi.felder2.graphic.FieldSourceGraphic;
+import schappi.felder2.graphic.BFieldSourceGraphic;
+import schappi.felder2.graphic.EFieldSourceGraphic;
 
 public class Simulation {
 	public int 						size;
-	public Set<FieldSourceGraphic>	sources;
+	public Set<EFieldSourceGraphic>	sources;
+	public Set<BFieldSourceGraphic>	bSources;
 	public HashMap<Point, Vector>	eField; 
 	public HashMap<Point, Double>	ePotential; 
-	public Set<List<Point>> 		fieldLines;
+	public HashMap<Point, Vector>	bField; 
+	public Set<List<Point>> 		eFieldLines;
+	public Set<List<Point>> 		bFieldLines;
 	public Set<List<Point>> 		epLines;
 	
 	private static final double TOLERANCE = 1E-32;
 	
-	public Simulation(int s, Set<FieldSourceGraphic> sources){
+	public Simulation(int s, Set<EFieldSourceGraphic> sources, Set<BFieldSourceGraphic> bSources){
 		size = s;
 		this.sources = sources;
+		this.bSources = bSources;
 		eField = new HashMap<Point, Vector>();
 		ePotential = new HashMap<Point, Double>();
-		fieldLines = new HashSet<List<Point>>();
+		bField = new HashMap<Point, Vector>();
+		eFieldLines = new HashSet<List<Point>>();
+		bFieldLines = new HashSet<List<Point>>();
 		epLines = new HashSet<List<Point>>();
 	}
 	
@@ -43,21 +51,28 @@ public class Simulation {
 		}else{
 			//eField
 			Vector currentF = new Vector(0,0);
-			for(FieldSourceGraphic s:sources){
+			for(EFieldSourceGraphic s:sources){
 				currentF = Vector.add(currentF, s.getFieldSource().getElField(p));
 			}
 			eField.put(p, currentF);
 			
 			//ePotential
 			double currentP = 0;
-			for(FieldSourceGraphic s:sources){
+			for(EFieldSourceGraphic s:sources){
 				currentP += s.getFieldSource().getElPotential(p);
 			}
 			ePotential.put(p, currentP);
+			
+			//bField
+			Vector currentBF = new Vector(0,0);
+			for(BFieldSourceGraphic s:bSources){
+				currentBF = Vector.add(currentBF, s.getFieldSource().getBField(p));
+			}
+			bField.put(p, currentBF);
 		}
 	}
 	
-	public void simulateFieldLine(Point p, double pixelPerNC, boolean posDirection){
+	public void simulateFieldLine(Point p, double pixelPerNC, boolean posDirection, Map<Point, Vector> field, Set<List<Point>> lines){
 		LinkedList<Point> list = new LinkedList<Point>();
 		list.add(p);
 		boolean done = false;
@@ -66,10 +81,10 @@ public class Simulation {
 		Point beforeLast = null;
 		
 		while(!done){
-			if(!eField.containsKey(last)){
+			if(!field.containsKey(last)){
 				simulate(list.get(list.size()-1));
 			}
-			if(eField.get(last) == null || eField.get(last).magnitude() < 1E5){
+			if(field.get(last) == null || field.get(last).magnitude() < TOLERANCE){
 				done = true;
 				continue;
 			}
@@ -77,14 +92,22 @@ public class Simulation {
 				done=true;
 				continue;
 			}
-			for(FieldSourceGraphic s:sources){
+			if(last != p && Vector.add(last, p.scalarMultiplication(-1.0)).magnitude() < 1E-8){
+				done = true;
+				continue;
+			}
+			for(EFieldSourceGraphic s:sources){
+				if(s.isNearby(last))
+					done = true;
+			}
+			for(BFieldSourceGraphic s:bSources){
 				if(s.isNearby(last))
 					done = true;
 			}
 			if(done){
 				continue;
 			}
-			Point next = Vector.add(last, eField.get(last).normalize().scalarMultiplication((posDirection ? 1 : -1)*pixelPerNC)).toPoint(); 
+			Point next = Vector.add(last, field.get(last).normalize().scalarMultiplication((posDirection ? 1 : -1)*pixelPerNC)).toPoint(); 
 			
 			if(beforeLast != null && Vector.add(next, beforeLast.scalarMultiplication(-1.0)).magnitude() < 1E-2){
 				list.removeLast();
@@ -96,24 +119,44 @@ public class Simulation {
 			beforeLast = last;
 			last = next;
 		}
-		fieldLines.add(list);
+		lines.add(list);
 	}
 	
-	public void simulateAllFieldLines(double pixelPerNC){
-		for(FieldSourceGraphic s:sources){
-			for(Point p:s.getBeginPointsFieldLines().keySet())
-				simulateFieldLine(p, pixelPerNC, s.getBeginPointsFieldLines().get(p));
+	/**
+	 * 
+	 * @param pixelPerNC
+	 * @param grid ob mit Gitter oder mit Anfangspunkten der Sources
+	 * @param density Anzahl der Gitterpunkte pro Reihe/Spalte (bei !grid egal)
+	 */
+	public void simulateAllFieldLines(double pixelPerNC, boolean grid, double density, Map<Point, Vector> field, Set<List<Point>> lines){
+		if(grid){
+			double diff = 1.0/density;
+			for(double x = 0.0; x <= size-1; x+=diff){
+				for(double y = 0.0; y <= size-1; y+=diff){
+					simulateFieldLine(new Point (x,y), pixelPerNC, true, field, lines);
+					simulateFieldLine(new Point (x,y), pixelPerNC, false, field, lines);
+				}
+			}
+		}
+		else{
+			for(EFieldSourceGraphic s:sources){
+				for(Point p:s.getBeginPointsFieldLines().keySet())
+					simulateFieldLine(p, pixelPerNC, s.getBeginPointsFieldLines().get(p), field, lines);
+			}
+			for(BFieldSourceGraphic s:bSources){
+				for(Point p:s.getBeginPointsFieldLines().keySet())
+					simulateFieldLine(p, pixelPerNC, s.getBeginPointsFieldLines().get(p), field, lines);
+			}
 		}
 	}
 	
-//	public void simulateAllFieldLines(double pixelPerNC){
-//		for(double x = 0.0; x <= size; x+=0.5){
-//			for(double y = 0.0; y <= size; y+=0.5){
-//				simulateFieldLine(new Point (x,y), pixelPerNC, true);
-//				simulateFieldLine(new Point (x,y), pixelPerNC, false);
-//			}
-//		}
-//	}
+	public void simulateAllElFieldLines(double pixelPerNC, boolean grid, double density){
+		simulateAllFieldLines(pixelPerNC, grid, density, eField, eFieldLines);
+	}
+	
+	public void simulateAllBFieldLines(double pixelPerNC, boolean grid, double density){
+		simulateAllFieldLines(pixelPerNC, grid, density, bField, bFieldLines);
+	}
 	
 	private boolean simulateEplHelp(Point s, double sw){
 		Point curr = s;
@@ -185,8 +228,8 @@ public class Simulation {
 	
 	public void simulateAllEpls(double deltaPot){
 		
-		for(double x = 0; x <= size; x += 0.1){
-			for(double y = 0; y <= size; y += 0.1){
+		for(double x = 0; x <= size-1; x += 0.1){
+			for(double y = 0; y <= size-1; y += 0.1){
 				simulate(new Point(x, y));
 				if(Math.abs(ePotential.get(new Point(x,y)) % deltaPot) < 5E3){
 					System.err.println("triggered: " + new Point(x, y) + " " + ePotential.get(new Point(x,y)));

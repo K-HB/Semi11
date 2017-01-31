@@ -3,16 +3,19 @@ package schappi.felder2.test;
 
 import java.util.HashSet;
 
+import javax.swing.JFrame;
+
 import schappi.felder2.Point;
 import schappi.felder2.Simulation;
-import schappi.felder2.graphic.FieldSourceGraphic;
-import schappi.felder2.graphic.PointChargeGraphic;
-import schappi.felder2.ui.FieldLinesWindow;
+import schappi.felder2.graphic.BFieldSourceGraphic;
+import schappi.felder2.graphic.EFieldSourceGraphic;
+import schappi.felder2.graphic.LineCurrentGraphic;
+import schappi.felder2.ui.DrawFieldLines;
 
 public class Test2 {
 
 	public static void main(String[] args) {
-//		HashSet<FieldSourceGraphic> set = new HashSet<FieldSourceGraphic>();
+		HashSet<EFieldSourceGraphic> set = new HashSet<EFieldSourceGraphic>();
 //		//Quadrat
 //		set.add(new PointChargeGraphic(0.25, 16, new Point(0.5,0.5), 1.0));
 //		set.add(new PointChargeGraphic(0.25, 16, new Point(2.5,2.5), 1.0));
@@ -24,7 +27,13 @@ public class Test2 {
 //		set.add(new PointCharge(new Point(2.5,0.5), 1.0));
 //		set.add(new PointCharge(new Point(1.5,0.5 + Math.sqrt(3)), 1.0));
 	
-//		Simulation sim = new Simulation(4, set);
+		HashSet<BFieldSourceGraphic> set2 = new HashSet<BFieldSourceGraphic>();
+		set2.add(new LineCurrentGraphic(0.25, new Point(0.5,0.5), 1.0));
+		
+		Simulation sim = new Simulation(4, set, set2);
+		
+		sim.simulateAllBFieldLines(1E-1, true, 2);
+		
 //		sim.simulateAll();
 		
 //		sim.simulateFieldLine(new Point(0.2,0.8), 1E-1);
@@ -45,14 +54,15 @@ public class Test2 {
 			System.out.println();
 		}*/
 		
-//		JFrame frame = new JFrame("Test");
-//		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//		frame.setSize(800, 800);
-//		frame.add(new DrawFieldLines(sim.fieldLines,sim.epLines, sim.size, set));
-//		frame.setVisible(true);
+		JFrame frame = new JFrame("Test");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setSize(800, 800);
+		DrawFieldLines dfl = new DrawFieldLines(sim.eFieldLines, sim.bFieldLines, sim.epLines, sim.size, set, set2);
+		dfl.drawBFieldLines = true;
+		frame.add(dfl);
+		frame.setVisible(true);
 		
-		new FieldLinesWindow(4, 800, 800);
-		
+		//new FieldLinesWindow(4, 800, 800);
 	}
 
 }

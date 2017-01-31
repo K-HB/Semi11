@@ -7,12 +7,12 @@ import java.awt.Stroke;
 import java.util.HashMap;
 import java.util.Map;
 
-import schappi.felder2.FieldSource;
+import schappi.felder2.EFieldSource;
 import schappi.felder2.Point;
 import schappi.felder2.PointCharge;
 import schappi.felder2.Vector;
 
-public class PointChargeGraphic extends FieldSourceGraphic {
+public class PointChargeGraphic extends EFieldSourceGraphic {
 	
 	private double radius;
 	private int numberFieldlines;
@@ -82,7 +82,7 @@ public class PointChargeGraphic extends FieldSourceGraphic {
 	}
 
 	@Override
-	public FieldSource getFieldSource() {
+	public EFieldSource getFieldSource() {
 		return fieldSource;
 	}
 

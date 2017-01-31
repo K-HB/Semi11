@@ -13,8 +13,12 @@ public class Vector {
 		return this.scalarMultiplication(1/this.magnitude());
 	}
 	
+	/**
+	 * 
+	 * @return orthogonalen Vector, der (0|0|1) x (x|y|z)  = (-y|x|0)
+	 */
 	public Vector orthogonal(){
-		return new Vector(this.y, -this.x);
+		return new Vector(-this.y, this.x);
 	}
 	
 	public double magnitude(){
