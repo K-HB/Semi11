@@ -14,10 +14,17 @@ public class Test2 {
 
 	public static void main(String[] args) {
 		HashSet<FieldSource> set = new HashSet<FieldSource>();
-		//set.add(new PointCharge(new Point(0.5,0.5), 1.0));
+		//Quadrat
+		set.add(new PointCharge(new Point(0.5,0.5), 1.0));
 		set.add(new PointCharge(new Point(2.5,2.5), 1.0));
 		set.add(new PointCharge(new Point(0.5,2.5), 1.0));
 		set.add(new PointCharge(new Point(2.5,0.5), 1.0));
+		
+		//gleichseitiges Dreieck
+//		set.add(new PointCharge(new Point(0.5,0.5), 1.0));
+//		set.add(new PointCharge(new Point(2.5,0.5), 1.0));
+//		set.add(new PointCharge(new Point(1.5,0.5 + Math.sqrt(3)), 1.0));
+		
 		Simulation sim = new Simulation(4, set);
 		sim.simulateAll();
 		
@@ -25,7 +32,7 @@ public class Test2 {
 //		sim.simulateFieldLine(new Point(0.3,1), 1E-1);
 //		sim.simulateFieldLine(new Point(0.2,1.2), 1E-1);
 		
-		sim.simulateAllFieldLines(1E-1);
+		sim.simulateAllFieldLines(1E-2);
 		
 		//sim.simulateAllEpls(5E6);
 		//sim.simulateEpll(new Point(1.8,1.8), 1E0, 1E-1);

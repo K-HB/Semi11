@@ -47,7 +47,6 @@ public class Simulation {
 			}
 			eField.put(p, currentF);
 			
-			
 			//ePotential
 			double currentP = 0;
 			for(FieldSource s:sources){
@@ -61,12 +60,15 @@ public class Simulation {
 		LinkedList<Point> list = new LinkedList<Point>();
 		list.add(p);
 		boolean done = false;
+		
+		Point last = p;
+		Point beforeLast = null;
+		
 		while(!done){
-			Point last = list.getLast();
 			if(!eField.containsKey(last)){
 				simulate(list.get(list.size()-1));
 			}
-			if(eField.get(last) == null || eField.get(last).magnitude() < TOLERANCE){
+			if(eField.get(last) == null || eField.get(last).magnitude() < 1E5){
 				done = true;
 				continue;
 			}
@@ -82,7 +84,16 @@ public class Simulation {
 				continue;
 			}
 			Point next = Vector.add(last, eField.get(last).normalize().scalarMultiplication((posDirection ? 1 : -1)*pixelPerNC)).toPoint(); 
+			
+			if(beforeLast != null && Vector.add(next, beforeLast.scalarMultiplication(-1.0)).magnitude() < 1E-2){
+				list.removeLast();
+				done = true;
+				continue;
+			}
+			
 			list.add(next);
+			beforeLast = last;
+			last = next;
 		}
 		fieldLines.add(list);
 	}
