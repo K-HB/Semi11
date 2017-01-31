@@ -1,24 +1,25 @@
 package schappi.felder2;
 
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import schappi.felder2.graphic.FieldSourceGraphic;
+
 public class Simulation {
 	public int 						size;
-	public HashSet<FieldSource>	sources;
+	public HashSet<FieldSourceGraphic>		sources;
 	public HashMap<Point, Vector>	eField; 
 	public HashMap<Point, Double>	ePotential; 
-	public Set<List<Point>> fieldLines;
-	public Set<List<Point>> epLines;
+	public Set<List<Point>> 		fieldLines;
+	public Set<List<Point>> 		epLines;
 	
 	private static final double TOLERANCE = 1E-32;
 	
-	public Simulation(int s, HashSet<FieldSource> sources){
+	public Simulation(int s, HashSet<FieldSourceGraphic> sources){
 		size = s;
 		this.sources = sources;
 		eField = new HashMap<Point, Vector>();
@@ -42,15 +43,15 @@ public class Simulation {
 		}else{
 			//eField
 			Vector currentF = new Vector(0,0);
-			for(FieldSource s:sources){
-				currentF = Vector.add(currentF, s.getElField(p));
+			for(FieldSourceGraphic s:sources){
+				currentF = Vector.add(currentF, s.getFieldSource().getElField(p));
 			}
 			eField.put(p, currentF);
 			
 			//ePotential
 			double currentP = 0;
-			for(FieldSource s:sources){
-				currentP += s.getElPotential(p);
+			for(FieldSourceGraphic s:sources){
+				currentP += s.getFieldSource().getElPotential(p);
 			}
 			ePotential.put(p, currentP);
 		}
@@ -76,7 +77,7 @@ public class Simulation {
 				done=true;
 				continue;
 			}
-			for(FieldSource s:sources){
+			for(FieldSourceGraphic s:sources){
 				if(s.isNearby(last))
 					done = true;
 			}
@@ -99,7 +100,7 @@ public class Simulation {
 	}
 	
 	public void simulateAllFieldLines(double pixelPerNC){
-		for(FieldSource s:sources){
+		for(FieldSourceGraphic s:sources){
 			for(Point p:s.getBeginPointsFieldLines().keySet())
 				simulateFieldLine(p, pixelPerNC, s.getBeginPointsFieldLines().get(p));
 		}

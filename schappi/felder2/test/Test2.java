@@ -5,20 +5,22 @@ import java.util.HashSet;
 
 import javax.swing.JFrame;
 
-import schappi.felder2.FieldSource;
 import schappi.felder2.Point;
-import schappi.felder2.PointCharge;
 import schappi.felder2.Simulation;
+import schappi.felder2.graphic.FieldSourceGraphic;
+import schappi.felder2.graphic.PointChargeGraphic;
+import schappi.felder2.ui.DrawFieldLines;
+import schappi.felder2.ui.FieldLinesWindow;
 
 public class Test2 {
 
 	public static void main(String[] args) {
-		HashSet<FieldSource> set = new HashSet<FieldSource>();
+		HashSet<FieldSourceGraphic> set = new HashSet<FieldSourceGraphic>();
 		//Quadrat
-		set.add(new PointCharge(new Point(0.5,0.5), 1.0));
-		set.add(new PointCharge(new Point(2.5,2.5), 1.0));
-		set.add(new PointCharge(new Point(0.5,2.5), 1.0));
-		set.add(new PointCharge(new Point(2.5,0.5), 1.0));
+		set.add(new PointChargeGraphic(0.25, 16, new Point(0.5,0.5), 1.0));
+		set.add(new PointChargeGraphic(0.25, 16, new Point(2.5,2.5), 1.0));
+		set.add(new PointChargeGraphic(0.25, 16, new Point(0.5,2.5), 1.0));
+		set.add(new PointChargeGraphic(0.25, 16, new Point(2.5,0.5), 1.0));
 		
 		//gleichseitiges Dreieck
 //		set.add(new PointCharge(new Point(0.5,0.5), 1.0));
@@ -49,9 +51,10 @@ public class Test2 {
 		JFrame frame = new JFrame("Test");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(800, 800);
-		frame.add(new DrawLine(sim.fieldLines,sim.epLines, sim.size));
+		frame.add(new DrawFieldLines(sim.fieldLines,sim.epLines, sim.size, set));
 		frame.setVisible(true);
 		
+		new FieldLinesWindow(4, 800, 800);
 		
 	}
 
