@@ -11,7 +11,7 @@ import schappi.felder2.graphic.FieldSourceGraphic;
 
 public class Simulation {
 	public int 						size;
-	public HashSet<FieldSourceGraphic>		sources;
+	public Set<FieldSourceGraphic>	sources;
 	public HashMap<Point, Vector>	eField; 
 	public HashMap<Point, Double>	ePotential; 
 	public Set<List<Point>> 		fieldLines;
@@ -19,7 +19,7 @@ public class Simulation {
 	
 	private static final double TOLERANCE = 1E-32;
 	
-	public Simulation(int s, HashSet<FieldSourceGraphic> sources){
+	public Simulation(int s, Set<FieldSourceGraphic> sources){
 		size = s;
 		this.sources = sources;
 		eField = new HashMap<Point, Vector>();
@@ -105,6 +105,15 @@ public class Simulation {
 				simulateFieldLine(p, pixelPerNC, s.getBeginPointsFieldLines().get(p));
 		}
 	}
+	
+//	public void simulateAllFieldLines(double pixelPerNC){
+//		for(double x = 0.0; x <= size; x+=0.5){
+//			for(double y = 0.0; y <= size; y+=0.5){
+//				simulateFieldLine(new Point (x,y), pixelPerNC, true);
+//				simulateFieldLine(new Point (x,y), pixelPerNC, false);
+//			}
+//		}
+//	}
 	
 	private boolean simulateEplHelp(Point s, double sw){
 		Point curr = s;

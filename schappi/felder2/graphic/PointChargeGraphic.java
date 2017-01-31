@@ -86,4 +86,43 @@ public class PointChargeGraphic extends FieldSourceGraphic {
 		return fieldSource;
 	}
 
+	public double getRadius() {
+		return radius;
+	}
+
+	public void setRadius(double radius) {
+		this.radius = radius;
+	}
+
+	public int getNumberFieldlines() {
+		return numberFieldlines;
+	}
+
+	public void setNumberFieldlines(int numberFieldlines) {
+		this.numberFieldlines = numberFieldlines;
+	}
+
+	public Point getPoint() {
+		return point;
+	}
+
+	public void setPoint(Point point) {
+		this.point = point;
+	}
+
+	public double getCharge() {
+		return charge;
+	}
+
+	public void setCharge(double charge) {
+		this.charge = charge;
+	}
+
+	@Override
+	public boolean isColliding(Point p) {
+		return Math.sqrt(Math.pow(p.x - point.x, 2) + Math.pow(p.y - point.y, 2)) < radius;
+	}
+	
+	
+
 }

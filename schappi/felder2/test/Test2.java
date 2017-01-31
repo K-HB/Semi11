@@ -48,11 +48,11 @@ public class Test2 {
 			System.out.println();
 		}*/
 		
-		JFrame frame = new JFrame("Test");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setSize(800, 800);
-		frame.add(new DrawFieldLines(sim.fieldLines,sim.epLines, sim.size, set));
-		frame.setVisible(true);
+//		JFrame frame = new JFrame("Test");
+//		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//		frame.setSize(800, 800);
+//		frame.add(new DrawFieldLines(sim.fieldLines,sim.epLines, sim.size, set));
+//		frame.setVisible(true);
 		
 		new FieldLinesWindow(4, 800, 800);
 		
