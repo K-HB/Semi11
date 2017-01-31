@@ -4,8 +4,8 @@ package schappi.felder2;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map.Entry;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 public class Simulation {
@@ -13,8 +13,8 @@ public class Simulation {
 	public HashSet<FieldSource>	sources;
 	public HashMap<Point, Vector>	eField; 
 	public HashMap<Point, Double>	ePotential; 
-	public ArrayList<ArrayList<Point>> fieldLines;
-	public ArrayList<ArrayList<Point>> epLines;
+	public Set<List<Point>> fieldLines;
+	public Set<List<Point>> epLines;
 	
 	private static final double TOLERANCE = 1E-32;
 	
@@ -23,8 +23,8 @@ public class Simulation {
 		this.sources = sources;
 		eField = new HashMap<Point, Vector>();
 		ePotential = new HashMap<Point, Double>();
-		fieldLines = new ArrayList<ArrayList<Point>>();
-		epLines = new ArrayList<ArrayList<Point>>();
+		fieldLines = new HashSet<List<Point>>();
+		epLines = new HashSet<List<Point>>();
 	}
 	
 
@@ -47,7 +47,6 @@ public class Simulation {
 			}
 			eField.put(p, currentF);
 			
-			
 			//ePotential
 			double currentP = 0;
 			for(FieldSource s:sources){
@@ -57,16 +56,19 @@ public class Simulation {
 		}
 	}
 	
-	public void simulateFieldLine(Point p, double pixelPerNC){
-		ArrayList<Point> list = new ArrayList<Point>();
+	public void simulateFieldLine(Point p, double pixelPerNC, boolean posDirection){
+		LinkedList<Point> list = new LinkedList<Point>();
 		list.add(p);
 		boolean done = false;
+		
+		Point last = p;
+		Point beforeLast = null;
+		
 		while(!done){
-			Point last = list.get(list.size()-1);
 			if(!eField.containsKey(last)){
 				simulate(list.get(list.size()-1));
 			}
-			if(eField.get(last) == null || eField.get(last).magnitude() < TOLERANCE){
+			if(eField.get(last) == null || eField.get(last).magnitude() < 1E5){
 				done = true;
 				continue;
 			}
@@ -81,15 +83,31 @@ public class Simulation {
 			if(done){
 				continue;
 			}
-			Point next = Vector.add(list.get(list.size()-1), eField.get(list.get(list.size()-1)).normalize().scalarMultiplication(pixelPerNC)).toPoint(); 
+			Point next = Vector.add(last, eField.get(last).normalize().scalarMultiplication((posDirection ? 1 : -1)*pixelPerNC)).toPoint(); 
+			
+			if(beforeLast != null && Vector.add(next, beforeLast.scalarMultiplication(-1.0)).magnitude() < 1E-2){
+				list.removeLast();
+				done = true;
+				continue;
+			}
+			
 			list.add(next);
+			beforeLast = last;
+			last = next;
 		}
 		fieldLines.add(list);
 	}
 	
+	public void simulateAllFieldLines(double pixelPerNC){
+		for(FieldSource s:sources){
+			for(Point p:s.getBeginPointsFieldLines().keySet())
+				simulateFieldLine(p, pixelPerNC, s.getBeginPointsFieldLines().get(p));
+		}
+	}
+	
 	private boolean simulateEplHelp(Point s, double sw){
 		Point curr = s;
-		ArrayList<Point> list = new ArrayList<Point>();
+		LinkedList<Point> list = new LinkedList<Point>();
 		while(true){
 			list.add(curr);
 			simulate(curr);
