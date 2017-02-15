@@ -55,10 +55,10 @@ public class LineCurrentGraphic extends BFieldSourceGraphic {
 			//nothing
 		}else{
 			//cross
-			g.drawLine((int) ((this.point.x-this.radius*SIN45)*horizontalPixelsPerUnit), (int) ((this.point.y-this.radius*SIN45)*horizontalPixelsPerUnit),
-					(int) ((this.point.x+this.radius*SIN45)*horizontalPixelsPerUnit), (int) ((this.point.y+this.radius*SIN45)*horizontalPixelsPerUnit));
-			g.drawLine((int) ((this.point.x+this.radius*SIN45)*horizontalPixelsPerUnit), (int) ((this.point.y-this.radius*SIN45)*horizontalPixelsPerUnit),
-					(int) ((this.point.x-this.radius*SIN45)*horizontalPixelsPerUnit), (int) ((this.point.y+this.radius*SIN45)*horizontalPixelsPerUnit));
+			g.drawLine((int) ((this.point.x-this.radius*SIN45)*horizontalPixelsPerUnit), (int) ((this.point.y-this.radius*SIN45)*verticalPixelsPerUnit),
+					(int) ((this.point.x+this.radius*SIN45)*horizontalPixelsPerUnit), (int) ((this.point.y+this.radius*SIN45)*verticalPixelsPerUnit));
+			g.drawLine((int) ((this.point.x+this.radius*SIN45)*horizontalPixelsPerUnit), (int) ((this.point.y-this.radius*SIN45)*verticalPixelsPerUnit),
+					(int) ((this.point.x-this.radius*SIN45)*horizontalPixelsPerUnit), (int) ((this.point.y+this.radius*SIN45)*verticalPixelsPerUnit));
 		}
 		
 		g.setStroke(new BasicStroke(3));
@@ -67,6 +67,7 @@ public class LineCurrentGraphic extends BFieldSourceGraphic {
 				(int)((this.point.y-this.radius)*verticalPixelsPerUnit), 
 				(int)(this.radius * 2 * horizontalPixelsPerUnit), 
 				(int)(this.radius * 2 * verticalPixelsPerUnit));
+		
 		g.setStroke(defaultStroke);
 	}
 

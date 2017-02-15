@@ -10,12 +10,13 @@ import java.util.Set;
 
 import javax.swing.JPanel;
 
+import schappi.felder2.Constants;
 import schappi.felder2.Point;
 import schappi.felder2.Vector;
 import schappi.felder2.graphic.BFieldSourceGraphic;
 import schappi.felder2.graphic.EFieldSourceGraphic;
 
-public class DrawFieldLines extends JPanel {
+public class DrawFieldLines extends JPanel implements Constants{
 
 	private static final long serialVersionUID = 1L;
 	public Set<List<Point>> eFieldLines;
@@ -84,9 +85,25 @@ public class DrawFieldLines extends JPanel {
 			for(List<Point> l:bFieldLines){
 				Iterator<Point> iter = l.iterator();
 				Point last = iter.next();
+				
+				//TODO TEST
+				int i = 0;
+				
 				while (iter.hasNext()){
 					Point curr = iter.next();
+					
+					if(i<3)
+						g.setColor(Color.RED);
+					if(i > l.size()-3)
+						g.setColor(Color.BLUE);
+					
 					g.drawLine((int) (last.x*hppu), (int) (last.y*vppu), (int) (curr.x*hppu), (int) (curr.y*vppu));
+					
+					if(i<3 || i > l.size()-3){
+						g.setColor(Color.GRAY);
+					}
+					i++;
+					
 					last = curr;
 				}
 			}
@@ -112,13 +129,24 @@ public class DrawFieldLines extends JPanel {
 		
 		//draw Vectors
 		if(drawVectors) {
-			double maxMagnitude = 0;
+//			double maxMagnitude = 0;
+//			for(Vector[] a:field)
+//				for(Vector v:a)
+//					if(v != null && v.magnitude() > maxMagnitude)
+//						maxMagnitude = v.magnitude();
+//			
+//			double factorVector = 0.95*distanceUnits/maxMagnitude/Math.sqrt(2);
+			
+			//andere Variante: durchschnittlicher Vektor bekommt Länge distanceUnits/2
+			//alle Vektoren die länger als sqrt(2)*distanceUnits sind werden übersprungen
+			double avMagnitude = 0;
 			for(Vector[] a:field)
 				for(Vector v:a)
-					if(v != null && v.magnitude() > maxMagnitude)
-						maxMagnitude = v.magnitude();
+					avMagnitude += v.magnitude();
+			avMagnitude /= field.length*field[0].length;
+
+			double factorVector = 0.48*distanceUnits/avMagnitude;
 			
-			double factorVector = 0.95*distanceUnits/maxMagnitude/Math.sqrt(2);
 			
 			for (int y = 0; y < field.length; y++){
 	    		for (int x = 0; x < field[0].length; x++){
@@ -126,6 +154,10 @@ public class DrawFieldLines extends JPanel {
 	    			if(v == null)
 	    				continue;
 	    			v = v.scalarMultiplication(factorVector);
+	    			
+	    			if(v.magnitude() > SQRT2*distanceUnits)
+	    				continue;
+	    			
 	    			drawArrow(g, (int) Math.round(distanceUnits*hppu+distanceUnits*hppu*x), (int) Math.round(distanceUnits*vppu+distanceUnits*vppu*y),
 	    					(int) Math.round(distanceUnits*hppu+distanceUnits*hppu*x + v.x*hppu), (int) Math.round(distanceUnits*vppu+distanceUnits*vppu*y + v.y*hppu));
 	    		}	
@@ -135,7 +167,7 @@ public class DrawFieldLines extends JPanel {
 		g.setStroke(dStroke);
 	}
 	
-	private void drawArrow(Graphics2D g, int x1, int y1, int x2, int y2) {
+	private static void drawArrow(Graphics2D g, int x1, int y1, int x2, int y2) {
         double dx = x2 - x1, dy = y2 - y1;
         double angle = Math.atan2(dy, dx);
         int len = (int) Math.sqrt(dx*dx + dy*dy);
