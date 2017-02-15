@@ -6,10 +6,11 @@ import java.awt.geom.AffineTransform;
 
 import javax.swing.JPanel;
 
+import schappi.felder2.Constants;
 import schappi.felder2.Vector;
 
 @SuppressWarnings("serial")
-public class FieldPanel extends JPanel{
+public class FieldPanel extends JPanel implements Constants{
 	private final Vector[][] field;
 	private final double distanceUnits;
 	private final int size;
@@ -20,13 +21,28 @@ public class FieldPanel extends JPanel{
 		this.distanceUnits = distanceUnits;
 		this.size = size;
 		
-		double maxMagnitude = 0;
+//		double maxMagnitude = 0;
+//		for(Vector[] a:field)
+//			for(Vector v:a)
+//				if(v != null && v.magnitude() > maxMagnitude)
+//					maxMagnitude = v.magnitude();
+//		
+//		this.factorVector = 0.95*distanceUnits/maxMagnitude;
+		
+		//andere Variante: durchschnittlicher Vektor bekommt Länge distanceUnits/2
+		//alle Vektoren die länger als sqrt(2)*distanceUnits sind werden übersprungen
+		//Änderung Unnötig, da Klasse veraltet -> in DrawFieldLines übertragen
+		
+		double avMagnitude = 0;
 		for(Vector[] a:field)
 			for(Vector v:a)
-				if(v != null && v.magnitude() > maxMagnitude)
-					maxMagnitude = v.magnitude();
+				avMagnitude += v.magnitude();
+		avMagnitude /= field.length*field[0].length;
+
+		this.factorVector = 0.48*distanceUnits/avMagnitude;
 		
-		this.factorVector = 0.95*distanceUnits/maxMagnitude;
+		//TODO TEST
+		System.out.printf("Ein Vektor der durchschnittlichen Länge %f hat eine Länge von %f Einheiten.", avMagnitude, factorVector*distanceUnits);
 	}
 	
 	private void drawArrow(Graphics g1, int x1, int y1, int x2, int y2) {
@@ -56,6 +72,8 @@ public class FieldPanel extends JPanel{
     			if(v == null)
     				continue;
     			v = v.scalarMultiplication(factorVector);
+    			if(v.magnitude() > SQRT2*distanceUnits)
+    				continue;
     			drawArrow(g, (int) Math.round(distanceUnits*hppu+distanceUnits*hppu*x), (int) Math.round(distanceUnits*vppu+distanceUnits*vppu*y),
     					(int) Math.round(distanceUnits*hppu+distanceUnits*hppu*x + v.x*hppu), (int) Math.round(distanceUnits*vppu+distanceUnits*vppu*y - /*y-Achse falschrum*/ v.y*hppu));
     		}	

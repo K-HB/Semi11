@@ -199,7 +199,7 @@ public class FieldLinesWindow extends JFrame implements MouseListener, ActionLis
 		if(e.getSource() == showFieldLines){
 			useGridFieldLines.setEnabled(showFieldLines.isSelected());
 			simulateAllNeeded();
-		}else if(e.getSource() == showVectors){
+		}else if(e.getSource() == showVectors || e.getSource() == showEPL){
 			simulateAllNeeded();
 		}else if(e.getSource() == useGridFieldLines){
 			slideDensity.setEnabled(useGridFieldLines.isSelected());
@@ -227,23 +227,35 @@ public class FieldLinesWindow extends JFrame implements MouseListener, ActionLis
 			sim.simulateAllBFieldLines(1E-2, useGridFieldLines.isSelected(), slideDensity.getValue());
 			dfl.eFieldLines = sim.eFieldLines;
 			dfl.bFieldLines = sim.bFieldLines;
-			dfl.repaint();
+			//dfl.repaint();
 		}else{
 			dfl.drawElFieldLines = false;
 			dfl.drawBFieldLines = false;
-			dfl.repaint();
+			//dfl.repaint();
 		}
 		if(showVectors.isSelected()){
 			dfl.drawVectors = true;
 			Simulation sim = new Simulation(size, dfl.sources, dfl.bSources);
 			dfl.field = genFieldArray(sim, .25, size);
 			dfl.distanceUnits = .25;
-			dfl.repaint();
+			//dfl.repaint();
 		}else{
 			dfl.drawVectors = false;
-			dfl.repaint();
+			//dfl.repaint();
 		}
+		if(showEPL.isSelected()){
+			dfl.drawEP = true;
+			Simulation sim = new Simulation(size, dfl.sources, dfl.bSources);
+			sim.simulateAllEpls(5E7 /* TODO: Einstellbar */);
+			dfl.epLines = sim.epLines;
+			//dfl.repaint();
+		}else{
+			dfl.drawEP = false;
+			//dfl.repaint();
+		}
+		
 		//TODO: tiefer Sinn, dass mehrfach repaint()?
+		dfl.repaint();
 	}
 	
 	private static Vector[][] genFieldArray(Simulation sim, double distanceUnits, int size){
